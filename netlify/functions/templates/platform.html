@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入 Font Awesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新污染物环境危害智能监测教学平台</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='sweetalert2.min.css') }}">
+    <script src="{{ url_for('static', filename='sweetalert2.all.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        /* 标题栏样式 */
+        h1 {
+            background-color: #0056b3;
+            color: white;
+            text-align: center;
+            padding: 12px;
+            margin: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            height: 34px; 
+        }
+
+        /* 团队信息样式 */
+        .team-info {
+            position: absolute;
+            /* 调整 top 值，使下边沿对齐 */
+            top: auto; 
+            bottom: 7px; 
+            /* 增大 right 值，往右移动 */
+            right: 200px; 
+            color: white;
+            font-size: 14px;
+            /* 移除不必要的 transform */
+            transform: none; 
+        }
+
+        /* 导航栏样式 */
+        .navbar {
+            background-color: #419af4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+            height: 30px;
+        }
+
+        .navbar ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .navbar li {
+            margin: 0 20px;
+            position: relative;
+        }
+
+        .navbar li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar li a:hover {
+            background-color: #0056b3;
+        }
+
+        /* 鼠标悬停在一级菜单显示二级菜单 */
+        .navbar li:hover > ul {
+            display: block;
+        }
+
+        /* 二级菜单样式 */
+        .navbar li > ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            z-index: 3;
+            padding: 5px 0;
+        }
+
+        .navbar li ul li {
+            margin: 0;
+            position: relative;
+        }
+
+        .navbar li ul li a {
+            color: #333;
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .navbar li ul li a:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* 鼠标悬停在二级菜单显示三级菜单 */
+        .navbar li ul li:hover > ul {
+            display: block;
+        }
+
+        /* 三级菜单样式 */
+        .navbar li ul li > ul {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 100%;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            z-index: 4;
+            padding: 5px 0;
+        }
+
+        .navbar li ul li ul li a {
+            color: #333;
+            text-align: left;
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: normal;
+        }
+
+        .navbar li ul li ul li a:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* 移除菜单图标 */
+        .sub-menu-icon {
+            display: none;
+        }
+
+        /* 移除不必要的 active 类控制子菜单显示的样式 */
+        .navbar li.active > ul {
+            display: none;
+        }
+
+        .navbar li ul {
+            will-change: transform, opacity;
+        }
+
+/* 图片容器样式 */
+.image-container {
+            width: 100%;
+            padding: 0.1px;
+            box-sizing: border-box;
+            height: 520px !important;
+        }
+
+        .image-slider {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 0.1px;
+        }
+
+        .image-slider img {
+            position: absolute;
+            max-width: 100%;
+            height: 100%;
+            object-fit: cover; 
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            /* 使图片居中 */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @media (max-width: 768px) {
+            .image-container {
+                min-height: 200px;
+            }
+        }
+        .image-slider img.active {
+            opacity: 1;
+        }
+
+        .image-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* Deepseek搜索样式 */
+        .deepseek-search {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .deepseek-search input {
+            width: 300px;
+            padding: 12px 15px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        .deepseek-search input:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        /* 修改选择框的样式 */
+        .deepseek-search select#search-type {
+            /* 增加宽度 */
+            width: 200px; 
+            /* 增加高度和内边距 */
+            padding: 12px 15px; 
+            /* 放大文字 */
+            font-size: 16px; 
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-right: 10px;
+            /* 确保鼠标指针为手型 */
+            cursor: pointer; 
+            transition: border-color 0.3s ease;
+        }
+        .deepseek-search select#search-type:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        .deepseek-search button {
+            padding: 12px 25px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .deepseek-search button:hover {
+            background-color: #0056b3;
+}
+
+        
+    </style>
+</head>
+
+<body>
+    <!-- 标题栏 -->
+    <h1>新污染物环境危害智能监测教学平台
+        <div class="team-info">
+            南科院新污染物环境智慧监测教学团队
+        </div>
+    </h1>
+    <!-- 导航栏 -->
+    <div class="navbar">
+        <ul>
+            {% for menu in menu_hierarchy %}
+                <li data-menu-id="{{ menu.id }}">
+                    <a href="#">
+                        {{ menu.name }}
+                        {% if menu.has_sub_menus %}
+                            <i class="fa-solid fa-caret-down sub-menu-icon"></i>
+                        {% endif %}
+                    </a>
+                    {% if menu.has_sub_menus %}
+                        <ul>
+                            {% for sub_menu in menu.sub_menus %}
+                                <li data-menu-id="{{ sub_menu.id }}">
+                                    <a href="#">
+                                        <span class="menu-text">&nbsp;&nbsp;&nbsp;&nbsp;{{ sub_menu.name }}</span>
+                                        {% if sub_menu.has_sub_menus %}
+                                            <i class="fa-solid fa-caret-down sub-menu-icon"></i>
+                                        {% endif %}
+                                    </a>
+                                    {% if sub_menu.has_sub_menus %}
+                                        <ul>
+                                            {% for third_level_menu in sub_menu.sub_menus %}
+                                                <li data-menu-id="{{ third_level_menu.id }}">
+                                                    <a href="#">
+                                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ third_level_menu.name }}
+                                                    </a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="image-container">
+        <div class="image-slider">
+            {% for image in random_images %}
+            <div>
+                <!-- 让 url_for 处理编码 -->
+                <img src="{{ url_for('static', filename='slide/' + image) }}" alt="{{ image.split('.')[0]|url_decode }}">
+                <div class="image-title">{{ image.split('.')[0]|url_decode }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="form-wrapper" style="padding: 5px 0;">
+        <div class="deepseek-search">
+            <input type="text" id="deepseek-prompt" placeholder="输入搜索提示词">
+            <select id="search-type">
+                <option value="deepseek-online">DeepSeek在线搜索</option>
+                <option value="doubao-online">豆包在线搜索</option>
+                <option value="deepseek-api">DeepSeek API搜索</option>
+            </select>
+            <button onclick="search()">搜索</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const images = document.querySelectorAll('.image-slider img');
+            const imageTitles = document.querySelectorAll('.image-slider .image-title');
+            let currentIndex = 0;
+
+            function showImage(index) {
+                images.forEach(function (img) {
+                    img.classList.remove('active');
+                });
+                imageTitles.forEach(function (title) {
+                    title.style.display = 'none';
+                });
+                images[index].classList.add('active');
+                imageTitles[index].style.display = 'block';
+            }
+
+            function nextImage() {
+                currentIndex = (currentIndex + 1) % images.length;
+                showImage(currentIndex);
+            }
+
+            showImage(currentIndex);
+            setInterval(nextImage, 5000);
+
+             // 为二级和三级菜单添加点击事件监听器
+             const subMenus = document.querySelectorAll('.navbar li ul li, .navbar li ul li ul li');
+            subMenus.forEach(menu => {
+                menu.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    const menuId = this.dataset.menuId;
+                    const menuName = getFullMenuName(this);
+                    const newWindow = window.open(`/get_menu_content_page?menu_id=${menuId}&menu_name=${encodeURIComponent(menuName)}`, '_blank');
+                    if (!newWindow) {
+                        console.error('无法打开新窗口');
+                        Swal.fire({
+                            icon: 'error',
+                            title: '错误',
+                            text: '无法打开新窗口，请检查浏览器设置。'
+                        });
+                    }
+                });
+            });
+                    
+
+            // 递归获取完整的菜单路径名称
+            function getFullMenuName(menuItem) {
+                const names = [];
+                let step = 0;
+                while (menuItem) {
+                    step++;
+                    const link = menuItem.querySelector('a');
+                    let text = '';
+                    if (link) {
+                        text = link.textContent.trim();
+                    }
+                    if (text) {
+                        names.unshift(text);
+                    }
+                    // 通过父级 UL 查找上级 LI，避免错误遍历
+                    menuItem = menuItem.parentElement.closest('ul')?.parentElement;
+                    if (!menuItem || menuItem.classList.contains('navbar')) {
+                        break;
+                    }
+                }
+                return names.join('>');
+            }
+        });
+
+        function search() {
+            const inputElement = document.getElementById('deepseek-prompt');
+            if (!inputElement) {
+                console.error('未找到输入框元素');
+                return;
+            }
+            const prompt = inputElement.value.trim();
+            if (prompt === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '输入为空',
+                    text: '请输入有效的搜索提示词。'
+                });
+                return;
+            }
+
+            const searchType = document.getElementById('search-type').value;
+            if (searchType === 'deepseek-online') {
+                window.open('https://www.deepseek.com', '_blank');
+            } else if (searchType === 'doubao-online') {
+                window.open('https://doubao.com', '_blank');
+            } else if (searchType === 'deepseek-api') {
+                const encodedPrompt = encodeURIComponent(prompt);
+                window.open(`/deepseek_search_result?prompt=${encodedPrompt}`, '_blank');
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>

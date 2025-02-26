@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>菜单管理平台</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 0;
+            margin: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 按钮容器样式 */
+       .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* 通用按钮样式 */
+        button,
+       .action-buttons a {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 5px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        button:hover,
+       .action-buttons a:hover {
+            background-color: #0056b3;
+        }
+
+        /* 表格样式 */
+        table {
+            width: 90%;
+            margin: 0 auto;
+            border-collapse: collapse;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+
+        th,
+        td {
+            border: 1px solid #e0e0e0;
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #e9ecef;
+        }
+
+        /* 操作按钮组样式 */
+       .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+       .action-buttons button {
+            background-color: #28a745;
+        }
+
+       .action-buttons button:hover {
+            background-color: #218838;
+        }
+
+       .action-buttons a {
+            background-color: #6c757d;
+        }
+
+       .action-buttons a:hover {
+            background-color: #5a6268;
+        }
+
+        /* 输入框样式 */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>内容管理平台</h1>
+    <div class="button-container">
+        <button onclick="window.location.href='{{ url_for('platform') }}'">发布</button>
+    </div>
+    <table>
+        <colgroup>
+            <col style="width: 40%;">
+            <col style="width: 15%;">
+            <col style="width: 45%;">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>菜单名称</th>
+                <th>菜单类型</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 递归渲染菜单 -->
+            {% for menu in menu_hierarchy %}
+            {% include 'menu_item.html' with context %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        function addSiblingMenu(menuId) {
+            console.log('进入 addSiblingMenu 函数');
+            console.log('接收到的 menuId:', menuId);
+
+            getParentIdFromServer(menuId)
+               .then(parentId => {
+                    createMenuWithData(parentId);
+                })
+               .catch(error => {
+                    console.error('获取父菜单 ID 出错:', error);
+                    alert('获取父菜单 ID 出错，请稍后重试');
+                });
+        }
+
+        function createMenuWithData(parentId) {
+            const menuName = prompt('请输入新菜单的名称');
+            const menuType = prompt('请输入新菜单的类型');
+            console.log('用户输入的菜单名称:', menuName);
+            console.log('用户输入的菜单类型:', menuType);
+
+            if (menuName && menuType) {
+                const formData = new FormData();
+                formData.append('parent_id', parentId);
+                formData.append('menu_name', menuName);
+                formData.append('menu_type', menuType);
+
+                console.log('即将发送的表单数据:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
+                fetch('{{ url_for('create_menu') }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                   .then(response => {
+                        console.log('响应状态码:', response.status);
+                        console.log('响应头:', response.headers);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP 错误! 状态码: ${response.status}`);
+                        }
+
+                        return response.text().then(text => {
+                            try {
+                                const data = JSON.parse(text);
+                                console.log('解析后的 JSON 数据:', data);
+                                return data;
+                            } catch (error) {
+                                console.error('解析响应为 JSON 时出错:', error);
+                                console.error('原始响应文本:', text);
+                                throw error;
+                            }
+                        });
+                    })
+                   .then(data => {
+                        console.log('后端返回的数据:', data);
+                        if (data.status === 'error') {
+                            alert('创建菜单失败: ' + data.message);
+                        } else {
+                            location.reload();
+                        }
+                    })
+                   .catch(error => {
+                        console.error('请求出错:', error);
+                        alert('请求出错，请稍后重试');
+                    });
+            }
+        }
+
+        function getParentIdFromServer(menuId) {
+            return new Promise((resolve, reject) => {
+                fetch(`{{ url_for('get_parent_id') }}?menu_id=${menuId}`, {
+                    method: 'GET'
+                })
+                   .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP 错误! 状态码: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                   .then(data => {
+                        if (data.status === 'success') {
+                            resolve(data.parent_id);
+                        } else {
+                            reject(new Error(data.message));
+                        }
+                    })
+                   .catch(error => {
+                        reject(error);
+                    });
+            });
+        }
+
+        function addChildMenu(menuId) {
+            console.log(`接收到的菜单 ID 为: ${menuId}`);
+
+            // 提示用户输入新菜单的名称和类型
+            const menuName = prompt('请输入新菜单的名称');
+            const menuType = prompt('请输入新菜单的类型');
+
+            // 检查用户是否输入了有效的菜单名称和类型
+            if (menuName && menuType) {
+                // 创建一个 FormData 对象来存储要发送的数据
+                const formData = new FormData();
+                formData.append('parent_id', menuId);
+                formData.append('menu_name', menuName);
+                formData.append('menu_type', menuType);
+
+                console.log(`即将发送的父菜单 ID 为: ${menuId}`);
+                console.log(`即将发送的菜单名称为: ${menuName}`);
+                console.log(`即将发送的菜单类型为: ${menuType}`);
+
+                // 发起 POST 请求到后端的创建菜单接口
+                fetch('{{ url_for('create_menu') }}', {
+                    method: 'POST',
+                    body: formData
+                })
+               .then(response => {
+                    console.log(`响应状态码为: ${response.status}`);
+                    console.log(`响应头信息为:`, response.headers);
+
+                    // 检查响应状态是否正常
+                    if (!response.ok) {
+                        throw new Error(`HTTP 错误! 状态码: ${response.status}`);
+                    }
+
+                    // 将响应转换为 JSON 格式
+                    return response.json();
+                })
+               .then(data => {
+                    console.log('后端返回的数据为:', data);
+
+                    // 根据后端返回的状态信息进行相应处理
+                    if (data.status === 'error') {
+                        alert(`创建菜单失败: ${data.message}`);
+                    } else {
+                        // 创建成功，刷新页面
+                        location.reload();
+                    }
+                })
+               .catch(error => {
+                    console.error('请求过程中出现错误:', error);
+                    alert('请求出错，请稍后重试');
+                });
+        }
+    }
+
+    // 为表格的 tbody 添加双击事件监听器
+    const menuTable = document.querySelector('table tbody');
+    menuTable.addEventListener('dblclick', function (event) {
+        const target = event.target;
+        if (target.classList.contains('menu-name') || target.classList.contains('menu-type')) {
+            const menuId = target.closest('tr').dataset.menuId;
+            const originalValue = target.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalValue;
+            target.textContent = '';
+            target.appendChild(input);
+            input.focus();
+
+            input.addEventListener('blur', function () {
+                const newValue = input.value;
+                if (newValue !== originalValue) {
+                    const field = target.classList.contains('menu-name') ? 'name' : 'type';
+                    fetch(`/update_menu_field?menu_id=${menuId}&field=${field}&new_value=${encodeURIComponent(newValue)}`)
+                       .then(response => response.json())
+                       .then(data => {
+                            if (data.success) {
+                                target.textContent = newValue;
+                            } else {
+                                target.textContent = originalValue;
+                                alert('更新失败：' + data.message);
+                            }
+                        })
+                       .catch(error => {
+                            target.textContent = originalValue;
+                            alert('请求出错：' + error.message);
+                        });
+                } else {
+                    target.textContent = originalValue;
+                }
+            });
+
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

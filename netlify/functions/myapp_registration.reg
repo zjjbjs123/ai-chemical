@@ -1,0 +1,14 @@
+
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\myapp]
+@="URL:MyApp Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\myapp\shell]
+
+[HKEY_CLASSES_ROOT\myapp\shell\open]
+
+[HKEY_CLASSES_ROOT\myapp\shell\open\command]
+@="E:\ai-chemical2\app.py" "%1"
+    

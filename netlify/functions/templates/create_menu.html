@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>创建菜单</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        form {
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>创建菜单</h1>
+    <form method="post" action="{{ url_for('create_menu') }}">
+        <label for="parent_id">父菜单:</label>
+        <select id="parent_id" name="parent_id">
+            <option value="">无（一级菜单）</option>
+            {% for menu in first_level_menus %}
+                <option value="{{ menu.id }}">{{ menu.name }}</option>
+                {% for sub_menu in menu.sub_menus %}
+                    <option value="{{ sub_menu.id }}">&nbsp;&nbsp;&nbsp;&nbsp;{{ sub_menu.name }}</option>
+                {% endfor %}
+            {% endfor %}
+        </select>
+        <label for="menu_name">菜单名称:</label>
+        <input type="text" id="menu_name" name="menu_name" required>
+        <label for="menu_type">菜单类型:</label>
+        <input type="text" id="menu_type" name="menu_type" required>
+        <input type="submit" value="创建">
+    </form>
+</body>
+
+</html>

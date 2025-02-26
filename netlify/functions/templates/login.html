@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 修正 viewport 标签的语法，去掉多余空格 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新污染物危害智能预测与综合评估教学平台 - 登录</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        #header {
+            text-align: center;
+            background-color: #337ab7;
+            color: white;
+            padding: 20px;
+        }
+
+        #header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        #login-form {
+            width: 350px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 30px auto;
+        }
+
+        #login-form label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        #login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #login-form input[type="submit"] {
+            background-color: #337ab7;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        #login-form input[type="submit"]:hover {
+            background-color: #286090;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #e0e0e0;
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <h1>新污染物危害智能预测与综合评估教学平台</h1>
+    </div>
+    <div id="login-form">
+        <h1>登录</h1>
+        <form method="post">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" required><br>
+            <label for="password">密码:</label>
+            <input type="password" id="password" name="password" required><br>
+            <input type="submit" value="登录">
+        </form>
+    </div>
+    <footer>南京科技职业学院</footer>
+</body>
+
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>编辑菜单内容</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            color: #0056b3;
+            margin: 30px 0;
+            font-size: 28px;
+        }
+
+        /* 表单容器样式 */
+        form {
+            background-color: #fff;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 标签样式 */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        /* 输入框、文件选择框和文本域样式 */
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="file"]:focus,
+        textarea:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        /* 下拉框样式 */
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23555" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        select:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        /* 按钮样式 */
+        button {
+            padding: 8px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* 已上传文件提示样式 */
+        p {
+            margin: 10px 0;
+            color: #777;
+        }
+
+        /* 放大简要介绍和文本内容输入框 */
+        #web_link_desc,
+        #attachment_desc,
+        #executable_desc,
+        #text_content {
+            height: 200px; /* 设置文本域高度 */
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>编辑子菜单内容</h1>
+    <form action="{{ url_for('edit_sub_menu_content') }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="menu_id" value="{{ menu.id }}">
+        <label for="content_type">内容类型:</label>
+        <select name="content_type" id="content_type" onchange="toggleInput()">
+            <option value="web_link" {% if menu.content_type == 'web_link' %}selected{% endif %}>网页链接</option>
+            <option value="attachment" {% if menu.content_type == 'attachment' %}selected{% endif %}>附件</option>
+            <option value="text" {% if menu.content_type == 'text' %}selected{% endif %}>文本内容</option>
+            <option value="executable" {% if menu.content_type == 'executable' %}selected{% endif %}>可执行程序</option>
+        </select>
+        <div id="web_link_input" {% if menu.content_type != 'web_link' %}style="display: none;"{% endif %}>
+            <label for="web_link">网页链接:</label>
+            <input type="text" id="web_link" name="web_link_content" value="{{ menu.content if menu.content_type == 'web_link' else '' }}">
+            <label for="web_link_desc">简要介绍:</label>
+            <textarea id="web_link_desc" name="description">{{ menu.description if menu.content_type == 'web_link' else '' }}</textarea>
+        </div>
+        <div id="attachment_input" {% if menu.content_type != 'attachment' %}style="display: none;"{% endif %}>
+            <label for="attachment">附件:</label>
+            <input type="file" id="attachment" name="attachment_content">
+            {% if menu.content_type == 'attachment' and menu.filename %}
+                <p>已上传的附件: {{ menu.filename }}</p>
+            {% endif %}
+            <label for="attachment_desc">简要介绍:</label>
+            <textarea id="attachment_desc" name="description">{{ menu.description if menu.content_type == 'attachment' else '' }}</textarea>
+        </div>
+        <div id="text_input" {% if menu.content_type != 'text' %}style="display: none;"{% endif %}>
+            <label for="text_content">文本内容:</label>
+            <textarea id="text_content" name="text_content">{{ menu.content if menu.content_type == 'text' else '' }}</textarea>
+        </div>
+        <div id="executable_input" {% if menu.content_type != 'executable' %}style="display: none;"{% endif %}>
+            <label for="executable">可执行程序:</label>
+            <input type="file" id="executable" name="executable_content">
+            {% if menu.content_type == 'executable' and menu.filename %}
+                <p>已上传的程序: {{ menu.filename }}</p>
+            {% endif %}
+            <label for="executable_desc">简要介绍:</label>
+            <textarea id="executable_desc" name="description">{{ menu.description if menu.content_type == 'executable' else '' }}</textarea>
+        </div>
+        <button type="submit">保存</button>
+    </form>
+    <script>
+        function toggleInput() {
+            var contentType = document.getElementById('content_type').value;
+            var webLinkInput = document.getElementById('web_link_input');
+            var attachmentInput = document.getElementById('attachment_input');
+            var textInput = document.getElementById('text_input');
+            var executableInput = document.getElementById('executable_input');
+
+            webLinkInput.style.display = contentType === 'web_link' ? 'block' : 'none';
+            attachmentInput.style.display = contentType === 'attachment' ? 'block' : 'none';
+            textInput.style.display = contentType === 'text' ? 'block' : 'none';
+            executableInput.style.display = contentType === 'executable' ? 'block' : 'none';
+        }
+        window.onload = function () {
+            toggleInput();
+        };
+
+        // 在表单提交前检查文本内容
+        document.querySelector('form').addEventListener('submit', function (event) {
+            var contentType = document.getElementById('content_type').value;
+            if (contentType === 'text') {
+                var textContent = document.getElementById('text_content').value;
+                console.log('提交的文本内容:', textContent);
+                if (!textContent || textContent.trim() === '') {
+                    console.error('文本内容为空');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

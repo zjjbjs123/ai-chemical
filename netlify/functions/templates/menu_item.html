@@ -1,0 +1,36 @@
+<!-- menu_item.html -->
+<tr data-menu-id="{{ menu.id }}">
+    <!-- 显示菜单名称，根据菜单层级添加缩进 -->
+    <td class="menu-name" style="padding-left: {{ menu.level * 20 }}px; {% if menu.level == 1 %}font-weight: bold;{% endif %}">
+        {{ menu.name }}
+    </td>
+    <!-- 显示菜单类型 -->
+    <td class="menu-type">
+        {{ menu.type }}
+    </td>
+    <td class="action-buttons">
+        <!-- 菜单上移操作 -->
+        <a href="{{ url_for('sort_menu', menu_id=menu.id, direction='up', isFirstLevel=menu.level == 1) }}">上移</a>
+        <!-- 菜单下移操作 -->
+        <a href="{{ url_for('sort_menu', menu_id=menu.id, direction='down', isFirstLevel=menu.level == 1) }}">下移</a>
+        <!-- 增加同级菜单 -->
+        <button onclick="addSiblingMenu({{ menu.id }})">增加同级目录</button>
+        <!-- 增加子菜单 -->
+        <button onclick="addChildMenu({{ menu.id }})">增加子目录</button>
+        <!-- 删除菜单 -->
+        <form action="{{ url_for('delete_menu') }}" method="post" onsubmit="return confirm('确定要删除此菜单吗？')">
+            <input type="hidden" name="menu_id" value="{{ menu.id }}">
+            <button type="submit">删除</button>
+        </form>
+        <!-- 移除原有的编辑名称按钮 -->
+        <!-- 编辑菜单内容 -->
+        <a href="{{ url_for('edit_sub_menu_content_page', menu_id=menu.id) }}">编辑内容</a>
+    </td>
+</tr>
+<!-- 如果该菜单有子菜单，递归渲染子菜单 -->
+{% if menu.sub_menus %}
+    {% for sub_menu in menu.sub_menus %}
+        {% set menu = sub_menu %}
+        {% include 'menu_item.html' with context %}
+    {% endfor %}
+{% endif %}

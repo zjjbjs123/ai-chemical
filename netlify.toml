@@ -6,8 +6,14 @@
   functions = "netlify/functions"
   publish = "netlify/functions/templates"
   environment = {NODE_OPTIONS = '--icu-data-dir=path/to/icu/data', LANG = 'en_US.UTF-8', PYTHONIOENCODING = "utf-8", NETLIFY_INDEX_FILE = "platform.html", PYTHON_VERSION = "3.12"}
-
-
+# 确保安装的tensorflow版本为2.18.0，在requirements.txt文件中应指定
+# 如：tensorflow==2.18.0，构建命令会自动安装
+# 如果自动安装有问题，可参考以下手动安装方式（需替换实际下载地址）
+# command = """
+#   wget https://pypi.org/project/tensorflow/#files/tensorflow - 2.18.0 - cp312 - cp312 - manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+#   pip install tensorflow - 2.18.0 - cp312 - cp312 - manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+#   pip install -r requirements.txt
+# """
 
 [functions]
   app = { path = "netlify/functions/app.py", handler = "handler" }

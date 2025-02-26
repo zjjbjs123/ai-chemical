@@ -1,10 +1,11 @@
 # Local Netlify folder
 .netlify
+.git
 
 __pycache__/
 
 # Virtual environment
-venv/
+myenv/
 
 # Log and temporary files
 *.log

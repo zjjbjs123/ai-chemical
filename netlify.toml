@@ -1,24 +1,35 @@
+[env]
+  DEEPSEEK_API_KEY = "sk-4b233fdcd3964197af28cedcb28efaec"
+
 [build]
   command = "pip install -r requirements.txt"
   functions = "netlify/functions"
   publish = "netlify/functions/templates"
+  environment = {NODE_OPTIONS = '--icu-data-dir=path/to/icu/data', LANG = 'en_US.UTF-8', PYTHONIOENCODING = "utf-8", NETLIFY_INDEX_FILE = "platform.html", PYTHON_VERSION = "3.12"}
 
-[build.environment]
-  # 指定默认首页
-  NETLIFY_INDEX_FILE = "platform.html"
-  PYTHON_VERSION = "3.12"
+
 
 [functions]
   app = { path = "netlify/functions/app.py", handler = "handler" }
-  test = { path = "netlify/functions/test_function.py", handler = "handler" }
+  database = { path = "netlify/functions/database.py", handler = "handler" }
+  api = { path = "netlify/functions/api.py", handler = "handler" }
+  fill_empty_ids = { path = "netlify/functions/fill_empty_ids.py", handler = "handler" } 
+  file_upload = { path = "netlify/functions/file_upload.py", handler = "handler" } 
 
 [[redirects]]
-  from = "/*"
+  from = "/api/app/*"
   to = "/.netlify/functions/app"
   status = 200
   force = false
 
 [[redirects]]
-  from = "/api/*"
+  from = "/api/other*"
   to = "/.netlify/functions/api"
   status = 200
+
+[dev]
+  command = "python netlify/functions/app.py"
+  port = 8888
+  targetPort = 5000
+  publish = "netlify/functions/templates"
+  framework = "#custom"

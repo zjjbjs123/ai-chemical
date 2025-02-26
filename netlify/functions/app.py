@@ -13,8 +13,24 @@ from database import get_db_connection, init_db
 from file_upload import save_uploaded_file
 import openai
 import sys
+from werkzeug.wrappers import Request, Response
 import urllib.parse
 from openai import OpenAIError
+import io
+
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
+
+
+# 配置日志
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    encoding='utf-8',  # 设置日志文件编码为 UTF-8
+    handlers=[
+        logging.StreamHandler()  # 输出到控制台的处理器
+    ]
+)
 
 app = Flask(__name__, static_folder='static')
 logging.info(f"静态文件目录: {app.static_folder}")
@@ -23,8 +39,7 @@ UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # 确保 JSON 数据能正确处理中文
 app.config['JSON_AS_ASCII'] = False
-# 配置日志
-logging.basicConfig(level=logging.DEBUG)
+
 # 定义管理员用户名和密码（使用 bcrypt 哈希处理）
 ADMIN_USERNAME = 'admin'
 ADMIN_PASSWORD = bcrypt.hashpw('password'.encode('utf-8'), bcrypt.gensalt())
@@ -32,9 +47,12 @@ ADMIN_PASSWORD = bcrypt.hashpw('password'.encode('utf-8'), bcrypt.gensalt())
 CORS(app)  # 允许跨域请求
 
 # 设置OpenAI（实际上是DeepSeek）的配置
-openai.api_key = os.environ.get('DEEPSEEK_API_KEY', 'sk-4b233fdcd3964197af28cedcb28efaec')
+# openai.api_key = os.environ.get('DEEPSEEK_API_KEY', 'sk-4b233fdcd3964197af28cedcb28efaec')
 MAX_RETRIES = 3
 RETRY_DELAY = 2  # 每次重试的延迟时间（秒）
+# 检查环境变量
+api_key = os.environ.get('DEEPSEEK_API_KEY')
+logging.debug(f"DEEPSEEK_API_KEY: {api_key}")
 
 
 def return_error(status, message):
@@ -50,7 +68,8 @@ def uploaded_file(filename):
 
 @functools.lru_cache(maxsize=1)
 def get_random_images():
-    slide_folder = os.path.join('static', 'slide')
+    # 使用 app.root_path 构建绝对路径
+    slide_folder = os.path.join(app.root_path, 'static', 'slide')
     allowed_extensions = ('.jpg', '.jpeg', '.png', '.gif')
     image_files = [f for f in os.listdir(slide_folder) if os.path.isfile(os.path.join(slide_folder, f)) and f.lower().endswith(allowed_extensions)]
     random.shuffle(image_files)
@@ -66,6 +85,7 @@ def url_decode(s):
 @app.route('/')
 def index():
     return redirect(url_for('login'))
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -84,6 +104,13 @@ def login():
 
 @app.route('/platform')
 def platform():
+    print(f"当前工作目录: {os.getcwd()}")
+    # 使用 app.root_path 构建绝对路径
+    slide_folder = os.path.join(app.root_path, 'static', 'slide')
+    if not os.path.exists(slide_folder):
+        logging.error(f"指定的路径 {slide_folder} 不存在")
+        return "指定的图片文件夹不存在，请检查配置", 500
+
     with get_db_connection() as conn:
         try:
             menu_hierarchy = build_menu_hierarchy(conn)
@@ -170,7 +197,6 @@ def create_menu():
 
 # 在获取菜单层级结构时，需要递归地查询子菜单，以支持任意层级的菜单。
 def build_menu_hierarchy(conn, parent_id=None, level=1):
-    import logging
     logging.info(f"开始查询 parent_id 为 {parent_id}，层级为 {level} 的菜单")
     if parent_id is None:
         menus = conn.execute(
@@ -230,7 +256,9 @@ def edit_menu_name():
     with get_db_connection() as conn:
         try:
             conn.execute('UPDATE menus SET name =? WHERE id =?', (new_name, menu_id))
+            conn.commit()  # 显式提交事务
         except Exception as e:
+            conn.rollback()  # 出现异常时回滚事务
             logging.error(f"编辑菜单名称时出错: {e}")
             return f"编辑菜单名称时出错: {e}", 500
     return redirect(url_for('platformmanage'))
@@ -330,9 +358,6 @@ def save_uploaded_file(file, upload_folder):
 
 @app.route('/edit_sub_menu_content', methods=['POST'])
 def edit_sub_menu_content():
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-
     logging.debug(f"请求方法: {request.method}")
     logging.debug(f"请求表单数据: {dict(request.form)}")
     logging.debug(f"请求文件数据: {dict(request.files)}")
@@ -561,7 +586,6 @@ def run_executable():
         except Exception as e:
             logging.error(f"查询可执行程序路径时出错: {e}")
             return f"查询可执行程序路径时出错: {e}", 500
-            return f"查询可执行程序路径时出错: {e}", 500
 
 
 @app.route('/download_attachment/<path:file_path>')
@@ -754,37 +778,48 @@ def deepseek_search_result():
 
 # 定义 handler 函数
 def handler(event, context):
-    import io
-    import sys
-    from werkzeug.wrappers import Request, Response
+    logging.debug("Handler function is called.")
+    logging.debug(f"Event: {event}")
+    logging.debug(f"Context: {context}")
+    try:
+        # 创建一个假的 WSGI 环境
+        environ = {
+            'REQUEST_METHOD': event.get('httpMethod', 'GET'),
+            'PATH_INFO': event.get('path', '/'),
+            'QUERY_STRING': event.get('queryStringParameters', ''),
+            'CONTENT_TYPE': event.get('headers', {}).get('Content-Type', ''),
+            'CONTENT_LENGTH': event.get('headers', {}).get('Content-Length', '0'),
+            'wsgi.input': io.BytesIO(event.get('body', '').encode('utf-8')),
+            'wsgi.version': (1, 0),
+            'wsgi.url_scheme': 'https',
+            'SERVER_NAME': 'localhost',
+            'SERVER_PORT': '8080'
+        }
 
-    # 创建一个假的 WSGI 环境
-    environ = {
-        'REQUEST_METHOD': event.get('httpMethod', 'GET'),
-        'PATH_INFO': event.get('path', '/'),
-        'QUERY_STRING': event.get('queryStringParameters', ''),
-        'CONTENT_TYPE': event.get('headers', {}).get('Content-Type', ''),
-        'CONTENT_LENGTH': event.get('headers', {}).get('Content-Length', '0'),
-        'wsgi.input': io.BytesIO(event.get('body', '').encode('utf-8')),
-        'wsgi.version': (1, 0),
-        'wsgi.url_scheme': 'https',
-        'SERVER_NAME': 'localhost',
-        'SERVER_PORT': '8080'
-    }
+        # 创建 Request 对象
+        request = Request(environ)
 
-    # 创建 Request 对象
-    request = Request(environ)
+        # 处理请求
+        with app.request_context(environ):
+            response = app.full_dispatch_request()
 
-    # 处理请求
-    with app.request_context(environ):
-        response = app.full_dispatch_request()
+        # 添加 CORS 头
+        headers = dict(response.headers)
+        headers['Access-Control-Allow-Origin'] = '*'  # 注意：在生产环境中应设置为具体的域名
+        headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        headers['Access-Control-Allow-Headers'] = 'Content-Type'
 
-    # 将 Flask 响应转换为 Netlify 函数响应
-    return {
-        'statusCode': response.status_code,
-        'headers': dict(response.headers),
-        'body': response.get_data(as_text=True)
-    }
+        return {
+           'statusCode': response.status_code,
+            'headers': headers,
+            'body': response.get_data(as_text=True)
+        }
+    except Exception as e:
+        logging.error(f"Error in handler function: {e}", exc_info=True)
+        return {
+           'statusCode': 500,
+            'body': f"Internal server error: {str(e)}"
+        }
 
 if __name__ == '__main__':
     init_db()

@@ -11,12 +11,13 @@
 [functions]
   app = { path = "netlify/functions/app.py", handler = "handler" }
 
-#[[redirects]]
-#  from = "/*"
-#  to = "/.netlify/functions/app"
-#  status = 200
+[[redirects]]
+  from = "/*"
+  to = "/.netlify/functions/app"
+  status = 200
+  force = false
 
-#[[redirects]]
-#  from = "/api/*"
-#  to = "/.netlify/functions/api"
-#  status = 200
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200

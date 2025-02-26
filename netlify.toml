@@ -10,6 +10,7 @@
 
 [functions]
   app = { path = "netlify/functions/app.py", handler = "handler" }
+  test = { path = "netlify/functions/test_function.py", handler = "handler" }
 
 [[redirects]]
   from = "/*"
